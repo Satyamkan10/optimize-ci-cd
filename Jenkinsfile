@@ -55,23 +55,8 @@ pipeline {
 
         success {
             sh """
-            ssh $SERVER "
-            echo '===== PROMOTING NEW VERSION ====='
-
-            docker stop $CONTAINER || true
-            docker rm $CONTAINER || true
-
-            docker rename $TEMP_CONTAINER $CONTAINER
-
-            sudo sed -i \"s|proxy_pass http://localhost:[0-9]*|proxy_pass http://localhost:$TEMP_PORT|g\" $NGINX_CONF
-
-            sudo nginx -t
-            sudo systemctl reload nginx
-
-            echo 'Deployment Successful'
-            docker ps | grep $CONTAINER
-            "
-            """
+            ssh $SERVER 'bash /home/ubuntu/promote.sh'
+"""
         }
         failure {
             sh """
