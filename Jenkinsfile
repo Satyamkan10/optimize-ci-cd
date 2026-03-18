@@ -5,6 +5,7 @@ pipeline {
         SERVER = "ubuntu@3.110.184.99"
         APP_DIR = "/home/ubuntu/health-app"
         CONTAINER = "health-container"
+        TEMP_CONTAINER = "health-container-temp"
         IMAGE = "health-app"
     }
 
@@ -29,15 +30,9 @@ pipeline {
 
                 cd $APP_DIR
 
-                docker build -t $IMAGE:new .
+                docker build -t $IMAGE:$BUILD_NUMBER .
 
-                # tag current running image as old (if exists)
-                docker image inspect $IMAGE:new >/dev/null 2>&1
-
-                docker stop $CONTAINER || true
-                docker rm $CONTAINER || true
-
-                docker run -d -p 3000:3000 --name $CONTAINER $IMAGE:new
+                docker run -d -p 3001:3000 --name $TEMP_CONTAINER $IMAGE:$BUILD_NUMBER || true
                 '
                 """
             }
@@ -47,7 +42,7 @@ pipeline {
             steps {
                 sh """
                 sleep 15
-                curl -f http://3.110.184.99:3000/health
+                curl -f http://3.110.184.99:3001/health
                 """
             }
         }
@@ -59,17 +54,35 @@ pipeline {
         success {
             sh """
             ssh $SERVER '
-            docker tag $IMAGE:new $IMAGE:old
-            '
+            docker stop $CONTAINER || true
+            docker rm $CONTAINER || true
+
+            echo "===== Switching Nginx Traffic ====="
+
+            NEW_PORT=3001
+            NGINX_CONF="/etc/nginx/sites-available/default"
+
+            echo "Updating nginx upstream to port $NEW_PORT"
+
+            sudo sed -i "s/proxy_pass http:\/\/localhost:[0-9]*/proxy_pass http:\/\/localhost:$NEW_PORT/g" $NGINX_CONF
+
+            echo "Testing nginx config..."
+            sudo nginx -t
+
+            echo "Reloading nginx..."
+            sudo systemctl reload nginx
+
+            echo "Traffic switched successfully"
+            docker rename $TEMP_CONTAINER $CONTAINER
+                       '
             """
         }
 
         failure {
             sh """
             ssh $SERVER '
-            docker stop $CONTAINER || true
-            docker rm $CONTAINER || true
-            docker run -d -p 3000:3000 --name $CONTAINER $IMAGE:old || true
+            docker stop $TEMP_CONTAINER || true
+            docker rm $TEMP_CONTAINER || true
             '
             """
         }
