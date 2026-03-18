@@ -8,6 +8,7 @@ pipeline {
         TEMP_CONTAINER = "health-container-temp"
         IMAGE = "health-app"
         TEMP_PORT = "3001"
+        NGINX_CONF="/etc/nginx/sites-available/default"
     }
 
     stages {
@@ -61,7 +62,7 @@ pipeline {
             echo "===== Switching Nginx Traffic ====="
 
         
-            NGINX_CONF="/etc/nginx/sites-available/default"
+            
 
             echo "Updating nginx upstream to port $TEMP_PORT..."
 
