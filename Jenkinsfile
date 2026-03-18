@@ -64,7 +64,7 @@ pipeline {
 
             echo "Updating nginx upstream to port $NEW_PORT"
 
-            sudo sed -i "s/proxy_pass http:\/\/localhost:[0-9]*/proxy_pass http:\/\/localhost:$NEW_PORT/g" $NGINX_CONF
+            sudo sed -i 's|proxy_pass http://localhost:[0-9]*|proxy_pass http://localhost:'"$NEW_PORT"'|g' $NGINX_CONF
 
             echo "Testing nginx config..."
             sudo nginx -t
