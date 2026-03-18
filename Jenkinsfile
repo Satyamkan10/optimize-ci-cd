@@ -7,6 +7,7 @@ pipeline {
         CONTAINER = "health-container"
         TEMP_CONTAINER = "health-container-temp"
         IMAGE = "health-app"
+        TEMP_PORT = "3001"
     }
 
     stages {
@@ -59,12 +60,12 @@ pipeline {
 
             echo "===== Switching Nginx Traffic ====="
 
-            NEW_PORT=3001
+        
             NGINX_CONF="/etc/nginx/sites-available/default"
 
-            echo "Updating nginx upstream to port $NEW_PORT"
+            echo "Updating nginx upstream to port $TEMP_PORT..."
 
-            sudo sed -i 's|proxy_pass http://localhost:[0-9]*|proxy_pass http://localhost:'"$NEW_PORT"'|g' $NGINX_CONF
+            sudo sed -i 's|proxy_pass http://localhost:[0-9]*|proxy_pass http://localhost:'"$TEMP_PORT"'|g' $NGINX_CONF
 
             echo "Testing nginx config..."
             sudo nginx -t
