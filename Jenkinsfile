@@ -55,37 +55,29 @@ pipeline {
 
         success {
             sh """
-            ssh $SERVER '
+            ssh $SERVER "
+            echo '===== PROMOTING NEW VERSION ====='
+
             docker stop $CONTAINER || true
             docker rm $CONTAINER || true
 
-            echo "===== Switching Nginx Traffic ====="
+            docker rename $TEMP_CONTAINER $CONTAINER
 
-        
-            
+            sudo sed -i \"s|proxy_pass http://localhost:[0-9]*|proxy_pass http://localhost:$TEMP_PORT|g\" $NGINX_CONF
 
-            echo "Updating nginx upstream to port $TEMP_PORT..."
-
-            sudo sed -i 's|proxy_pass http://localhost:[0-9]*|proxy_pass http://localhost:'"$TEMP_PORT"'|g' $NGINX_CONF
-
-            echo "Testing nginx config..."
             sudo nginx -t
-
-            echo "Reloading nginx..."
             sudo systemctl reload nginx
 
-            echo "Traffic switched successfully"
-            docker rename $TEMP_CONTAINER $CONTAINER
-                       '
+            echo 'Deployment Successful'
+            docker ps | grep $CONTAINER
+            "
             """
         }
-
         failure {
             sh """
-            ssh $SERVER '
-            docker stop $TEMP_CONTAINER || true
-            docker rm $TEMP_CONTAINER || true
-            '
+            ssh $SERVER "
+            docker rm -f $TEMP_CONTAINER || true
+            "
             """
         }
 
