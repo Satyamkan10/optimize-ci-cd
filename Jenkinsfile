@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SERVER = "ubuntu@3.109.143.141"
+        SERVER = "ubuntu@43.205.145.11    "
         APP_DIR = "/home/ubuntu/health-app"
         CONTAINER = "health-container"
         TEMP_CONTAINER = "health-container-temp"
