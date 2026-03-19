@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SERVER = "ubuntu@3.110.184.99"
+        SERVER = "ubuntu@3.109.143.141"
         APP_DIR = "/home/ubuntu/health-app"
         CONTAINER = "health-container"
         TEMP_CONTAINER = "health-container-temp"
@@ -44,7 +44,7 @@ pipeline {
             steps {
                 sh """
                 sleep 15
-                curl -f http://3.110.184.99:3001/health
+                curl -f http://3.109.143.141:3001/health
                 """
             }
         }
